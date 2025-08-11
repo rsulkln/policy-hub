@@ -1,4 +1,4 @@
-package jwti
+package auth
 
 import (
 	"fmt"
@@ -8,11 +8,21 @@ import (
 
 var jwtSecret = []byte("SECRET KEY")
 
+type MyCustomClaims struct {
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
+}
+
 func GenerateAccessToken(userID, role string) (string, error) {
-	claims := jwt.MapClaims{
-		"sub":  fmt.Sprint(userID),
-		"role": role,
-		"exp":  time.Now().Add(time.Minute * 15).Unix(),
+	claims := MyCustomClaims{
+		UserID: fmt.Sprint(userID),
+		Role:   role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "projectCRUD ",
+		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 

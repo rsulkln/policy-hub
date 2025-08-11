@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	jwt "github.com/golang-jwt/jwt/v5"
+	"net/http"
 	"project/auth"
 )
 
 func main() {
-	token, jErr := jwti.GenerateAccessToken("23", "admin")
+	http.HandleFunc("/login", auth.LoginHandler)
+
+	token, jErr := auth.GenerateAccessToken("23", "admin")
 	if jErr != nil {
 		fmt.Println("you have an error to generate token !")
 
@@ -15,7 +18,7 @@ func main() {
 	}
 	fmt.Printf("token generated! %+v ", token)
 
-	parsedToken, vErr := jwti.ValidationToken(token)
+	parsedToken, vErr := auth.ValidationToken(token)
 	if vErr != nil {
 		fmt.Printf("token is not valid :%+v", vErr)
 	}

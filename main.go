@@ -7,18 +7,18 @@ import (
 	"log"
 	"net/http"
 	"project/auth"
-	"project/database"
+	"project/database/mongo"
 	"project/model"
 	"project/security"
 	"time"
 )
 
 func main() {
-	err := database.InitMongo()
+	err := mongo.InitMongo()
 	if err != nil {
 		panic(err)
 	}
-	database.NewMongoUserRepository(database.Client, "CRUDapplication", "users")
+	mongo.NewMongoUserRepository(mongo.Client, "CRUDapplication", "users")
 
 	newUser := &model.User{
 		ID:       "rasol",
@@ -36,7 +36,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	repo := database.NewMongoUserRepository(database.Client, "CRUDapplication", "users")
+	repo := mongo.NewMongoUserRepository(mongo.Client, "CRUDapplication", "users")
 	nErr := repo.CreateUser(ctx, newUser)
 	if nErr != nil {
 		log.Fatal("you have an error to create a new user!", nErr)

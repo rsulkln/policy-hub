@@ -9,22 +9,30 @@ import (
 	"project/auth"
 	"project/database"
 	"project/model"
+	"project/security"
 	"time"
 )
 
 func main() {
 	err := database.InitMongo()
 	if err != nil {
-		fmt.Println("i can't connection to mongoDB!", err)
+		panic(err)
 	}
 	database.NewMongoUserRepository(database.Client, "CRUDapplication", "users")
 
 	newUser := &model.User{
-		ID:       "user1",
-		Name:     "test",
-		Password: "test",
-		Role:     "user",
+		ID:       "rasol",
+		Name:     "kln",
+		Password: "123456",
+		Role:     "admin",
 	}
+
+	if hashPAss, hashErr := security.HashPassword(newUser.Password); hashErr != nil {
+		panic(hashErr)
+	} else {
+		newUser.Password = hashPAss
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -33,10 +41,10 @@ func main() {
 	if nErr != nil {
 		log.Fatal("you have an error to create a new user!", nErr)
 	}
-	
+
 	http.HandleFunc("/login", auth.LoginHandler)
 
-	token, jErr := auth.GenerateAccessToken("23", "admin")
+	token, jErr := auth.GenerateAccessToken(newUser.ID, newUser.Role)
 	if jErr != nil {
 		fmt.Println("you have an error to generate token !")
 

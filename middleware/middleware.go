@@ -10,8 +10,8 @@ import (
 type contextKey string
 
 const (
-	ContextUsetrID contextKey = "usetID"
-	ContextRole    contextKey = "role"
+	ContextUserID contextKey = "usetID"
+	ContextRole   contextKey = "role"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -35,15 +35,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			return
 		}
-		claims, ok := token.Claims.(auth.MyCustomClaims)
+		claims, ok := token.Claims.(*auth.MyCustomClaims)
 		if !ok {
 			http.Error(w, "Invalid token claims!", http.StatusUnauthorized)
 
 			return
 		}
-		ctx := context.WithValue(r.Context(), ContextUsetrID, claims.UserID)
+		ctx := context.WithValue(r.Context(), ContextUserID, claims.UserID)
 		ctx = context.WithValue(ctx, ContextRole, claims.Role)
-
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"project/database/redis"
+	"strings"
 	"time"
 )
 
@@ -105,6 +106,12 @@ func LogoutTokenHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error deleting refresh token", http.StatusInternalServerError)
 
 		return
+	}
+
+	accsecToken := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if accsecToken != "" {
+		ttl := time.Hour
+		redisd.RDB.Set(redisd.Ctx, "blacklist_"+accsecToken, "true", ttl)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

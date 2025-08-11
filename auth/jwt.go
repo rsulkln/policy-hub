@@ -10,6 +10,7 @@ var jwtSecret = []byte("SECRET KEY")
 
 func GenerateAccessToken(userID, role string) (string, error) {
 	claims := jwt.MapClaims{
+		"sub":  fmt.Sprint(userID),
 		"role": role,
 		"exp":  time.Now().Add(time.Minute * 15).Unix(),
 	}

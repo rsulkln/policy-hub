@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"log"
 	"net/http"
 	"project/auth"
 	"project/database/mongo"
 	redisd "project/database/redis"
+	_ "project/docs"
 	"project/middleware"
 	"project/model"
 	"project/repository"
@@ -16,7 +19,27 @@ import (
 	"time"
 )
 
+// @title           Project CRUD API
+// @version         1.0
+// @description     This is the API documentation for Project CRUD.
+// @host            localhost:8080
+// @BasePath        /
+
 func main() {
+
+	r := mux.NewRouter()
+
+	// هندلر Swagger UI
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+	// مثال: یک هندلر تست
+	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "pong")
+	}).Methods("GET")
+
+	// اجرای سرور
+	fmt.Println("Server started at :8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 	redisd.InitRedis()
 
 	err := mongo.InitMongo()

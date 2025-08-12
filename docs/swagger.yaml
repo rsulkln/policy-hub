@@ -1,0 +1,84 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: This is the API documentation for Project CRUD.
+  title: Project CRUD API
+  version: "1.0"
+paths:
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Deletes the refresh token from Redis and blacklists the current
+        access token until it expires.
+      parameters:
+      - description: Refresh token
+        in: body
+        name: refresh_token
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully logged out
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Invalid refresh token
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Logout and invalidate tokens
+      tags:
+      - Auth
+  /refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Create a new access token using a valid refresh token.
+      parameters:
+      - description: Refresh token
+        in: body
+        name: refresh_token
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: new access_token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Refresh access token
+      tags:
+      - Auth
+swagger: "2.0"

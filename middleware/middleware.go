@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"project/auth"
+	redisd "project/database/redis"
 	"strings"
 )
 
@@ -36,6 +37,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			return
 		}
+
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
@@ -55,6 +57,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			return
 		}
+
+		if val, _ := redisd.RDB.Get(redisd.Ctx, "blacklist_"+tokenString).Result(); val == "true" {
+			http.Error(w, "Token is blacklisted", http.StatusUnauthorized)
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), ContextUserID, claims.UserID)
 		ctx = context.WithValue(ctx, ContextRole, claims.Role)
 		next.ServeHTTP(w, r.WithContext(ctx))

@@ -63,7 +63,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		role := GetRoleFromContext(r.Context())
+		role := strings.ToLower(GetRoleFromContext(r.Context()))
 		if role != "admin" {
 			http.Error(w, "Forbidden!", http.StatusForbidden)
 

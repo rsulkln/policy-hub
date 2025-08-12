@@ -17,8 +17,8 @@ type MongoUserRepository struct {
 }
 
 func NewMongoUserRepository(client *mongoDriver.Client, dbName, CollectionName string) *MongoUserRepository {
-	_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	//defer cancel()
 	collection := client.Database(dbName).Collection(CollectionName)
 	return &MongoUserRepository{collection: collection}
 }
@@ -31,6 +31,7 @@ func (repo *MongoUserRepository) CreateUser(ctx context.Context, user *model.Use
 	}
 	return nil
 }
+
 func (repo *MongoUserRepository) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 
 	var user model.User
@@ -84,8 +85,8 @@ func (repo *MongoUserRepository) GetUserByUsername(ctx context.Context, username
 		return nil, err
 	}
 
-	casheTtl := 10 * time.Minute
-	cErr := redisd.SetCash(username, &user, casheTtl)
+	cashTtl := 10 * time.Minute
+	cErr := redisd.SetCash(username, &user, cashTtl)
 	if cErr != nil {
 		log.Println("wrong i can not set cash", cErr)
 	}

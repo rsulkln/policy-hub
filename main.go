@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"project/auth"
 	"project/database/mongo"
+	redisd "project/database/redis"
 	"project/middleware"
 	"project/model"
 	"project/repository"
@@ -16,6 +17,8 @@ import (
 )
 
 func main() {
+	redisd.InitRedis()
+
 	err := mongo.InitMongo()
 	if err != nil {
 		panic(err)

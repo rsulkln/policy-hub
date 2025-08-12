@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	mongoDriver "go.mongodb.org/mongo-driver/mongo"
 	"project/database/mongo"
+	redisd "project/database/redis"
 	"project/model"
 	"time"
 )
@@ -30,10 +31,19 @@ func (repo *MongoUserRepository) CreateUser(ctx context.Context, user *model.Use
 	return nil
 }
 func (repo *MongoUserRepository) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+
+	var user model.User
+	gErr := redisd.GetCash(id, user)
+	if gErr != nil {
+		return nil, gErr
+	}
+	if user.ID == "" {
+		return nil, nil
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
-	var user model.User
+
 	filter := bson.M{"_id": id}
 	err := repo.collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {

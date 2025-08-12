@@ -9,7 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var Client *mongo.Client
+var (
+	Client *mongo.Client
+	DB     *mongo.Database
+)
 
 func InitMongo() error {
 
@@ -28,7 +31,10 @@ func InitMongo() error {
 	}
 
 	fmt.Println("mongo connected successfully!")
+
 	Client = mongoClient
+
+	DB = mongoClient.Database("policy-hub")
 
 	return nil
 }

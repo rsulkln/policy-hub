@@ -10,9 +10,23 @@ import (
 type contextKey string
 
 const (
-	ContextUserID contextKey = "usetID"
+	ContextUserID contextKey = "userID"
 	ContextRole   contextKey = "role"
 )
+
+func GetUserIDFromContext(ctx context.Context) string {
+	if val, ok := ctx.Value(ContextUserID).(string); ok {
+		return val
+	}
+	return ""
+}
+
+func GetRoleFromContext(ctx context.Context) string {
+	if val, ok := ctx.Value(ContextRole).(string); ok {
+		return val
+	}
+	return ""
+}
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,5 +58,17 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), ContextUserID, claims.UserID)
 		ctx = context.WithValue(ctx, ContextRole, claims.Role)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role := GetRoleFromContext(r.Context())
+		if role != "admin" {
+			http.Error(w, "Forbidden!", http.StatusForbidden)
+
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }

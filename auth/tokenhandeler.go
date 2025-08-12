@@ -2,8 +2,11 @@ package auth
 
 import (
 	"encoding/json"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"project/database/mongo"
 	"project/database/redis"
+	"project/repository"
 	"strings"
 	"time"
 )
@@ -21,8 +24,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if creds.UserName != "admin" || creds.Password != "test" {
-		http.Error(w, "Unauthorized!", http.StatusUnauthorized)
+	repo := repository.NewMongoUserRepository(mongo.Client, "policy-hub", "users")
+	mUser, gErr := repo.GetUserByID(r.Context(), creds.UserName)
+	if gErr != nil {
+		http.Error(w, "unauthorized!", http.StatusBadRequest)
+
+		return
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(mUser.Password), []byte(creds.Password)) != nil {
+		http.Error(w, "unauthorized!", http.StatusBadRequest)
 
 		return
 	}

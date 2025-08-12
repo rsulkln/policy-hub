@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	mongoDriver "go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"project/database/mongo"
 	redisd "project/database/redis"
 	"project/model"
@@ -33,12 +34,14 @@ func (repo *MongoUserRepository) CreateUser(ctx context.Context, user *model.Use
 func (repo *MongoUserRepository) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 
 	var user model.User
-	gErr := redisd.GetCash(id, user)
+	gErr := redisd.GetCash(id, &user)
+
 	if gErr != nil {
 		return nil, gErr
 	}
-	if user.ID == "" {
-		return nil, nil
+
+	if user.ID != "" {
+		return &user, nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -52,20 +55,39 @@ func (repo *MongoUserRepository) GetUserByID(ctx context.Context, id string) (*m
 		}
 		return nil, err
 	}
+	casheTtl := 10 * time.Minute
+	if cErr := redisd.SetCash(id, &user, casheTtl); cErr != nil {
+		log.Println("wrong i can not set cash")
+	}
 	return &user, nil
 }
 
 func (repo *MongoUserRepository) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-
-	defer cancel()
-
 	var user model.User
-	if err := mongo.DB.Collection("users").FindOne(ctx, bson.M{"username": username}).Decode(&user); err != nil {
-		return nil, err
 
-	} else {
-		return &user, err
+	gErr := redisd.GetCash(username, &user)
+	if gErr != nil {
+		return nil, gErr
 	}
 
+	if user.Name != "" {
+		return &user, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := mongo.DB.Collection("users").FindOne(ctx, bson.M{"username": username}).Decode(&user); err != nil {
+		if errors.Is(err, mongoDriver.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	casheTtl := 10 * time.Minute
+	cErr := redisd.SetCash(username, &user, casheTtl)
+	if cErr != nil {
+		log.Println("wrong i can not set cash", cErr)
+	}
+	return &user, nil
 }

@@ -26,6 +26,7 @@ func InitMongo() error {
 
 		return pErr
 	}
+
 	fmt.Println("mongo connected successfully!")
 	Client = mongoClient
 
